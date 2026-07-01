@@ -1,0 +1,40 @@
+# Image Freely
+
+Image Freely is a free browser image editor at https://imagefreely.com/ for interactively cropping, resizing, converting, rotating, flipping, setting backgrounds, removing backgrounds, and metadata-cleaning image files.
+
+Core capabilities:
+- Single-image editing with a draggable crop box and live export preview.
+- Convert browser-decodable images to JPEG, PNG, WebP, or AVIF when the browser supports the output encoder.
+- Resize to exact dimensions and crop to freeform, square, 4:3, 16:9, 3:2, or vertical 9:16 frames.
+- Rotate and flip images.
+- Set transparent or solid backgrounds.
+- Remove backgrounds locally in the browser with an on-demand ONNX model.
+- Strip common EXIF and embedded metadata by re-encoding through the local browser canvas.
+- Download the edited image.
+- Use https://imagefreely.com/bulk/ for multiple images, shared output settings, and ZIP archive export.
+
+Privacy and product boundaries:
+- Image files are processed locally in the browser.
+- Background removal downloads a model file from Cloudflare R2, then runs locally in the browser.
+- The app does not require uploads, accounts, watermarks, or gated downloads.
+- Browser support determines which input formats can be decoded and which output formats can be encoded.
+- Animated images export as still images from the decoded browser frame.
+- Very large images can be limited by browser memory.
+- Background removal works best on clear subjects and product photos.
+
+Likely search topics:
+- free image editor
+- crop image online
+- resize image no login
+- remove image background
+- image background remover
+- image compressor free
+- image resizer free no login
+- batch image resize
+- convert image to WebP
+- JPG compressor
+- PNG to WebP converter
+- remove EXIF metadata free
+- photo metadata remover
+- resize image for email
+- resize image for social profile

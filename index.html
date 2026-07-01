@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Free browser image editor for resizing, cropping, converting, rotating, flipping, background color, and background removal. Edit one image locally with no upload, signup, watermark, or download gate.">
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
+    <meta name="theme-color" content="#f5f4ee">
+    <meta name="application-name" content="Image Freely">
+    <meta property="og:title" content="Free Image Editor: Resize, Crop, Convert, Remove Background | Image Freely">
+    <meta property="og:description" content="Edit one image locally in your browser. Resize, crop, convert, rotate, flip, set backgrounds, remove backgrounds, and download without upload or watermark.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imagefreely.com/">
+    <meta property="og:site_name" content="Image Freely">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Free Image Editor: Resize, Crop, Convert, Remove Background | Image Freely">
+    <meta name="twitter:description" content="Local browser image editor for crop, resize, conversion, background color, and background removal.">
+    <title>Free Image Editor: Resize, Crop, Convert, Remove Background | Image Freely</title>
+    <link rel="canonical" href="https://imagefreely.com/">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="AI-readable site summary">
+    <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/shared/freely-ui.css">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://computefreely.com/#organization",
+            "name": "Compute Freely",
+            "url": "https://computefreely.com/"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://imagefreely.com/#app",
+            "name": "Image Freely",
+            "url": "https://imagefreely.com/",
+            "description": "A free browser-only image editor for cropping, resizing, converting, rotating, flipping, setting backgrounds, removing backgrounds, and exporting JPG, PNG, WebP, or AVIF when supported.",
+            "applicationCategory": "UtilitiesApplication",
+            "operatingSystem": "Any modern browser",
+            "browserRequirements": "Requires JavaScript, Canvas, Blob, and modern image decoding support. Background removal loads an ONNX model on demand.",
+            "isAccessibleForFree": true,
+            "publisher": {
+              "@id": "https://computefreely.com/#organization"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "url": "https://imagefreely.com/"
+            },
+            "featureList": [
+              "Interactive crop editor",
+              "Export at crop scale or fixed custom dimensions",
+              "Convert to JPEG, PNG, WebP, or AVIF when supported by the browser",
+              "Rotate and flip images",
+              "Set transparent or solid color backgrounds",
+              "Remove image backgrounds locally with an on-demand browser model",
+              "Strip metadata by re-encoding locally in the browser"
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://imagefreely.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Does Image Freely upload my images?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Image Freely edits images in the browser with Canvas APIs and does not require an upload step."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can Image Freely remove image backgrounds?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Background removal runs in the browser after loading a model on demand. It works best with clear subjects and may vary by device."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I batch compress and resize images?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. The separate Image Freely Bulk page handles multiple images, shared output settings, and ZIP downloads."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which image formats are supported?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Image Freely supports browser-decodable image inputs and can export JPEG, PNG, WebP, and AVIF where the current browser supports encoding those formats."
+                }
+              }
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://imagefreely.com/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Compute Freely",
+                "item": "https://computefreely.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Image Freely",
+                "item": "https://imagefreely.com/"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <script src="assets/vendor/rembg/ort.min.js" defer></script>
+    <script src="assets/vendor/rembg/rembg-web.umd.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Image Freely home">
+        <img class="brand-mark" src="assets/icons/favicon.svg" alt="" width="40" height="40" aria-hidden="true">
+        <span>
+          <strong>Image Freely</strong>
+          <small>Local image editing</small>
+        </span>
+      </a>
+      <div class="topbar-actions image-topbar-actions">
+        <nav class="tool-switcher" aria-label="Image Freely tools">
+          <a class="tool-switcher-link active" href="/" aria-current="page">
+            <strong>Editor</strong>
+            <span>Single image edits</span>
+          </a>
+          <a class="tool-switcher-link" href="/bulk/">
+            <strong>Bulk</strong>
+            <span>Batch compress and convert</span>
+          </a>
+        </nav>
+        <div class="guarantee-pills" aria-label="Site guarantees">
+          <span class="status-pill">Free</span>
+          <span class="status-pill">No uploads</span>
+          <span class="status-pill">No watermark</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="editor-shell app-shell">
+      <section class="editor-pane" aria-labelledby="editorTitle">
+        <div class="workspace-header">
+          <div>
+            <p class="eyebrow">Image Editor</p>
+            <h1 id="editorTitle">Edit one image with live crop and export preview</h1>
+          </div>
+          <div class="engine-badge" id="editorBadge" aria-live="polite">Ready</div>
+        </div>
+
+        <div class="promise-strip" aria-label="Freely promise">
+          <strong>No account. No upload. No watermark. No download gate.</strong>
+          <a href="https://computefreely.com/">Compute Freely promise</a>
+        </div>
+
+        <div class="editor-drop" id="editorDrop">
+          <input id="editorFileInput" class="file-input" type="file" accept="image/*,.heic,.heif">
+          <label class="drop-label" for="editorFileInput">
+            <span class="drop-icon upload-icon" aria-hidden="true"></span>
+            <span class="drop-title">Choose, drop, or paste one image</span>
+            <span class="drop-note">Crop, resize, convert, remove background, and download locally in your browser</span>
+          </label>
+        </div>
+
+        <div class="editor-workbench" id="editorWorkbench" hidden>
+          <div class="preview-toolbar" aria-label="Editor actions">
+            <button class="mini-button" type="button" id="undoButton">Undo</button>
+            <button class="mini-button" type="button" id="redoButton">Redo</button>
+            <button class="mini-button" type="button" id="resetCropButton">Reset crop</button>
+          </div>
+
+          <div class="editor-stage" id="editorStage" aria-label="Crop editor">
+            <canvas id="sourceCanvas"></canvas>
+            <div class="crop-box" id="cropBox" hidden>
+              <span class="crop-handle nw" data-handle="nw"></span>
+              <span class="crop-handle n" data-handle="n"></span>
+              <span class="crop-handle ne" data-handle="ne"></span>
+              <span class="crop-handle e" data-handle="e"></span>
+              <span class="crop-handle se" data-handle="se"></span>
+              <span class="crop-handle s" data-handle="s"></span>
+              <span class="crop-handle sw" data-handle="sw"></span>
+              <span class="crop-handle w" data-handle="w"></span>
+            </div>
+          </div>
+
+          <div class="editor-meta" aria-label="Image summary">
+            <div>
+              <span>Source</span>
+              <strong id="sourceMeta">No image</strong>
+            </div>
+            <div>
+              <span>Crop</span>
+              <strong id="cropMeta">0 x 0</strong>
+            </div>
+            <div>
+              <span>Output</span>
+              <strong id="outputMeta">0 x 0</strong>
+            </div>
+            <div>
+              <span>Estimate</span>
+              <strong id="estimateMeta">Not exported</strong>
+            </div>
+          </div>
+
+          <section class="output-preview" aria-labelledby="outputPreviewTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Live Preview</p>
+                <h2 id="outputPreviewTitle">Export result</h2>
+              </div>
+              <button class="mini-button" type="button" id="downloadButton" disabled>Download</button>
+            </div>
+            <div class="output-canvas-wrap">
+              <canvas id="outputCanvas"></canvas>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <form id="editorForm" class="control-pane editor-controls">
+        <section class="panel" aria-labelledby="quickTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Quick Jobs</p>
+              <h2 id="quickTitle">Common edits</h2>
+            </div>
+          </div>
+          <div class="preset-row" aria-label="Editor presets">
+            <button class="preset" type="button" data-editor-preset="avatar">Square avatar</button>
+            <button class="preset" type="button" data-editor-preset="social">Social crop</button>
+            <button class="preset" type="button" data-editor-preset="email">Email 1600</button>
+            <button class="preset" type="button" data-editor-preset="webp">Website WebP</button>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="cropTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Crop</p>
+              <h2 id="cropTitle">Frame the image</h2>
+            </div>
+          </div>
+          <label class="field full">
+            <span>Aspect ratio</span>
+            <select id="aspectRatio">
+              <option value="free">Free crop</option>
+              <option value="1:1">Square 1:1</option>
+              <option value="4:3">Standard 4:3</option>
+              <option value="16:9">Widescreen 16:9</option>
+              <option value="3:2">Photo 3:2</option>
+              <option value="9:16">Vertical 9:16</option>
+            </select>
+          </label>
+          <p class="helper-text">Drag the crop box or its handles. The export preview updates as you edit.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="resizeTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Resize</p>
+              <h2 id="resizeTitle">Export size</h2>
+            </div>
+          </div>
+          <label class="field full">
+            <span>Size mode</span>
+            <select id="sizeMode">
+              <option value="scale">Scale crop</option>
+              <option value="custom">Custom dimensions</option>
+            </select>
+          </label>
+          <label class="field full" id="scaleControls">
+            <span>Scale <output id="scaleValue">100%</output></span>
+            <input id="outputScale" type="range" min="10" max="200" step="5" value="100">
+          </label>
+          <div class="field-grid two" id="customSizeControls" hidden>
+            <label class="field">
+              <span>Width</span>
+              <input id="outputWidth" type="number" min="1" max="12000" step="1" value="1200" inputmode="numeric">
+            </label>
+            <label class="field">
+              <span>Height</span>
+              <input id="outputHeight" type="number" min="1" max="12000" step="1" value="800" inputmode="numeric">
+            </label>
+          </div>
+          <label class="checkline" id="lockOutputLine" hidden>
+            <input id="lockOutputRatio" type="checkbox" checked>
+            <span>Keep crop ratio</span>
+          </label>
+          <label class="checkline">
+            <input id="preventUpscale" type="checkbox" checked>
+            <span>Do not enlarge small images</span>
+          </label>
+          <p class="helper-text" id="resizeHelp">Export at 100% of the crop, or switch to custom dimensions for a fixed target size.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="backgroundTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Background</p>
+              <h2 id="backgroundTitle">Transparent or solid</h2>
+            </div>
+          </div>
+          <div class="field-grid two">
+            <label class="field">
+              <span>Background</span>
+              <select id="backgroundMode">
+                <option value="transparent">Transparent when possible</option>
+                <option value="color">Solid color</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Color</span>
+              <input id="backgroundColor" type="color" value="#ffffff">
+            </label>
+          </div>
+          <button class="button" type="button" id="removeBackgroundButton" disabled>Remove background</button>
+          <p class="helper-text" id="backgroundHelp">Choose an image first. The browser model loads on demand and works best for clear subjects and product photos.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="adjustTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Transform</p>
+              <h2 id="adjustTitle">Rotate, flip, and export</h2>
+            </div>
+          </div>
+          <div class="field-grid two">
+            <label class="field">
+              <span>Format</span>
+              <select id="format">
+                <option value="image/png">PNG</option>
+                <option value="image/jpeg">JPEG</option>
+                <option value="image/webp">WebP</option>
+                <option value="image/avif">AVIF if supported</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Quality <output id="qualityValue">90%</output></span>
+              <input id="quality" type="range" min="35" max="100" value="90">
+            </label>
+          </div>
+          <div class="field-grid two">
+            <label class="field">
+              <span>Rotation</span>
+              <select id="rotation">
+                <option value="0">0 degrees</option>
+                <option value="90">90 degrees</option>
+                <option value="180">180 degrees</option>
+                <option value="270">270 degrees</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Filename suffix</span>
+              <input id="filenameSuffix" type="text" value="-edited" spellcheck="false">
+            </label>
+          </div>
+          <div class="toggle-row" aria-label="Flip options">
+            <label class="checkline">
+              <input id="flipHorizontal" type="checkbox">
+              <span>Flip horizontal</span>
+            </label>
+            <label class="checkline">
+              <input id="flipVertical" type="checkbox">
+              <span>Flip vertical</span>
+            </label>
+          </div>
+          <p class="helper-text">Canvas export re-encodes the image locally, which removes typical EXIF and location metadata.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="bulkTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">More Images</p>
+              <h2 id="bulkTitle">Need batch exports?</h2>
+            </div>
+          </div>
+          <p class="helper-text">Use the bulk page for many files, shared settings, and ZIP downloads.</p>
+          <a class="button" href="/bulk/">Open bulk tools</a>
+        </section>
+      </form>
+    </main>
+
+    <section class="discovery-section" aria-labelledby="discoveryTitle">
+      <div class="discovery-content">
+        <p class="eyebrow">Discovery</p>
+        <h2 id="discoveryTitle">Free image editor with no upload step</h2>
+        <p class="discovery-lede">Image Freely is built for common searches like free image editor, image cropper, image resizer no login, background remover, PNG background color, WebP converter, JPG compressor, and remove EXIF metadata. Edit one image on the main page, or open the bulk page for many images at once.</p>
+        <ul class="search-terms" aria-label="Common Image Freely searches">
+          <li>free image editor</li>
+          <li>crop image online</li>
+          <li>resize image no login</li>
+          <li>remove image background</li>
+          <li>convert image to WebP</li>
+          <li>batch image resize</li>
+        </ul>
+        <div class="discovery-grid" aria-label="Image Freely capabilities">
+          <article>
+            <h3>Interactive editing</h3>
+            <p>Drag a crop box, resize the export, rotate, flip, choose a format, and preview the output before downloading.</p>
+          </article>
+          <article>
+            <h3>Background tools</h3>
+            <p>Keep transparency, add a solid color, or load an on-demand browser model to remove a clear subject background locally.</p>
+          </article>
+          <article>
+            <h3>Bulk when needed</h3>
+            <p>The separate bulk page keeps batch compression, conversion, metadata cleanup, and ZIP export available for many files.</p>
+          </article>
+        </div>
+        <div class="faq-list" id="faq" aria-label="Image Freely answers">
+          <article>
+            <h3>Does Image Freely upload my images?</h3>
+            <p>No. Files are decoded, edited, and exported in your browser.</p>
+          </article>
+          <article>
+            <h3>Does background removal run on a server?</h3>
+            <p>No. The browser downloads a model and runs background removal locally on your device.</p>
+          </article>
+          <article>
+            <h3>Can I still process many images?</h3>
+            <p>Yes. The bulk page supports multiple images, shared output settings, and ZIP downloads.</p>
+          </article>
+          <article>
+            <h3>Does it add a watermark?</h3>
+            <p>No. Downloads are your edited image files without an Image Freely mark.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer suite-footer">
+      <div class="suite-footer-head">
+        <strong>More free local-first browser tools</strong>
+        <span>Freely tools run in your browser when possible, with no accounts, uploads, watermarks, or download gates.</span>
+      </div>
+      <nav class="suite-footer-nav" aria-label="Freely tools">
+        <a class="suite-link" href="https://computefreely.com/"><strong>Compute Freely</strong><span>Free local browser tools</span></a>
+        <a class="suite-link" href="https://qrfreely.com/"><strong>QR Freely</strong><span>Free QR code generator</span></a>
+        <a class="suite-link" href="https://videofreely.com/"><strong>Video Freely</strong><span>Browser video converter</span></a>
+        <a class="suite-link" href="https://pdffreely.com/"><strong>PDF Freely</strong><span>PDF merge, split, and organize</span></a>
+        <a class="suite-link" href="https://fillfreely.com/"><strong>Fill Freely</strong><span>PDF form filler and signer</span></a>
+        <a class="suite-link" href="https://imagefreely.com/"><strong>Image Freely</strong><span>Image editor and bulk converter</span></a>
+      </nav>
+      <nav class="suite-footer-meta" aria-label="Project links">
+        <a href="https://github.com/ComputeFreely/imagefreely.com">Source on GitHub</a>
+        <a href="https://github.com/ComputeFreely/imagefreely.com/issues/new">Report an issue</a>
+        <a href="mailto:info@computefreely.com">info@computefreely.com</a>
+      </nav>
+    </footer>
+  </body>
+</html>

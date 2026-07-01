@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Free bulk image compressor, resizer, converter, and metadata cleaner. Batch convert JPG, PNG, WebP, and AVIF locally in your browser with no upload, signup, or watermark.">
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
+    <meta name="theme-color" content="#f5f4ee">
+    <meta name="application-name" content="Image Freely">
+    <meta property="og:title" content="Bulk Image Compressor, Resizer, and Converter | Image Freely">
+    <meta property="og:description" content="Batch compress, resize, convert, and strip image metadata in your browser. ZIP downloads, no uploads, no signup, no watermark.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imagefreely.com/bulk/">
+    <meta property="og:site_name" content="Image Freely">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Bulk Image Compressor, Resizer, and Converter | Image Freely">
+    <meta name="twitter:description" content="Browser-only bulk image compression, resizing, format conversion, metadata stripping, and ZIP downloads.">
+    <title>Bulk Image Compressor, Resizer, and Converter | Image Freely</title>
+    <link rel="canonical" href="https://imagefreely.com/bulk/">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="AI-readable site summary">
+    <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../assets/shared/freely-ui.css">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://computefreely.com/#organization",
+            "name": "Compute Freely",
+            "url": "https://computefreely.com/"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://imagefreely.com/#app",
+            "name": "Image Freely",
+            "url": "https://imagefreely.com/bulk/",
+            "description": "A free browser-only bulk image compressor, resizer, converter, cropper, and metadata cleaner for JPG, PNG, WebP, AVIF, and other browser-decodable image files.",
+            "applicationCategory": "UtilitiesApplication",
+            "operatingSystem": "Any modern browser",
+            "browserRequirements": "Requires JavaScript, Canvas, Blob, and modern image decoding support.",
+            "isAccessibleForFree": true,
+            "publisher": {
+              "@id": "https://computefreely.com/#organization"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "url": "https://imagefreely.com/bulk/"
+            },
+            "featureList": [
+              "Batch image compression",
+              "Resize by maximum edge, exact size, percentage, or square crop",
+              "Convert to JPEG, PNG, WebP, or AVIF when supported by the browser",
+              "Rotate and flip images",
+              "Strip metadata by re-encoding locally in the browser",
+              "Download individual images or a ZIP archive"
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://imagefreely.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Does Image Freely upload my images?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Image Freely processes images in the browser with Canvas APIs and does not require an upload step."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I batch compress and resize images?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. The bulk page lets you add multiple images, apply shared output settings, and download the processed files individually or as a ZIP."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can Image Freely remove EXIF metadata?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Re-encoding through the browser canvas strips typical embedded metadata such as EXIF location and camera tags from exported files."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which image formats are supported?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Image Freely supports browser-decodable image inputs and can export JPEG, PNG, WebP, and AVIF where the current browser supports encoding those formats."
+                }
+              }
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://imagefreely.com/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Compute Freely",
+                "item": "https://computefreely.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Image Freely",
+                "item": "https://imagefreely.com/bulk/"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <script src="bulk.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Image Freely home">
+        <img class="brand-mark" src="../assets/icons/favicon.svg" alt="" width="40" height="40" aria-hidden="true">
+        <span>
+          <strong>Image Freely</strong>
+          <small>Bulk compression and conversion</small>
+        </span>
+      </a>
+      <div class="topbar-actions image-topbar-actions">
+        <nav class="tool-switcher" aria-label="Image Freely tools">
+          <a class="tool-switcher-link" href="/">
+            <strong>Editor</strong>
+            <span>Single image edits</span>
+          </a>
+          <a class="tool-switcher-link active" href="/bulk/" aria-current="page">
+            <strong>Bulk</strong>
+            <span>Batch compress and convert</span>
+          </a>
+        </nav>
+        <div class="guarantee-pills" aria-label="Site guarantees">
+          <span class="status-pill">Free</span>
+          <span class="status-pill">No uploads</span>
+          <span class="status-pill">No watermark</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="workspace-pane" aria-labelledby="workspaceTitle">
+        <div class="workspace-header">
+          <div>
+            <p class="eyebrow">Image Workspace</p>
+            <h1 id="workspaceTitle">Bulk compress, resize, and convert images</h1>
+          </div>
+          <div class="engine-badge" id="engineBadge" aria-live="polite">Ready</div>
+        </div>
+
+        <div class="promise-strip" aria-label="Freely promise">
+          <strong>No account. No upload. No watermark. No download gate.</strong>
+          <a href="https://computefreely.com/">Compute Freely promise</a>
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+          <input id="fileInput" class="file-input" type="file" accept="image/*,.heic,.heif" multiple>
+          <label class="drop-label" for="fileInput">
+            <span class="drop-icon upload-icon" aria-hidden="true"></span>
+            <span class="drop-title">Choose or drop images</span>
+            <span class="drop-note">Batch JPG, PNG, WebP, AVIF, GIF stills, BMP, TIFF, and any image your browser can decode</span>
+          </label>
+        </div>
+
+        <div class="workspace-stats" aria-label="Image summary">
+          <div>
+            <span>Images</span>
+            <strong id="fileCount">0</strong>
+          </div>
+          <div>
+            <span>Original</span>
+            <strong id="originalSize">0 KB</strong>
+          </div>
+          <div>
+            <span>Output</span>
+            <strong id="outputSize">0 KB</strong>
+          </div>
+          <div>
+            <span>Savings</span>
+            <strong id="savingsSize">0%</strong>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="button primary" type="button" id="processSelected">
+            <span class="button-icon convert-icon" aria-hidden="true"></span>
+            Process selected
+          </button>
+          <button class="button" type="button" id="downloadZip">
+            <span class="button-icon zip-icon" aria-hidden="true"></span>
+            Download ZIP
+          </button>
+          <button class="button" type="button" id="downloadSelected">
+            <span class="button-icon download-icon" aria-hidden="true"></span>
+            Download selected
+          </button>
+          <button class="button ghost" type="button" id="resetAll">
+            <span class="button-icon reset-icon" aria-hidden="true"></span>
+            Reset
+          </button>
+        </div>
+
+        <div class="batch-bar" aria-label="Image batch actions">
+          <button type="button" class="mini-button" data-batch="select-all">Select all</button>
+          <button type="button" class="mini-button" data-batch="select-none">Select none</button>
+          <button type="button" class="mini-button" data-batch="invert">Invert</button>
+          <button type="button" class="mini-button" data-batch="remove-complete">Remove complete</button>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          <h2>Start with one image or a whole folder of exports.</h2>
+          <p>Files stay on your device. Image Freely reads them in the browser, strips metadata during export, and only creates downloads when you ask.</p>
+        </div>
+
+        <div class="image-grid" id="imageGrid" aria-label="Selected images"></div>
+      </section>
+
+      <form id="imageForm" class="control-pane">
+        <section class="panel" aria-labelledby="presetTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Presets</p>
+              <h2 id="presetTitle">Common jobs</h2>
+            </div>
+          </div>
+          <div class="preset-row" aria-label="Output presets">
+            <button class="preset" type="button" data-preset="email">Email 1600</button>
+            <button class="preset" type="button" data-preset="web">Website WebP</button>
+            <button class="preset" type="button" data-preset="avatar">Square avatar</button>
+            <button class="preset" type="button" data-preset="social">Social JPG</button>
+            <button class="preset" type="button" data-preset="convert">Convert only</button>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="outputTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Output</p>
+              <h2 id="outputTitle">Format and compression</h2>
+            </div>
+          </div>
+          <div class="field-grid two">
+            <label class="field">
+              <span>Format</span>
+              <select id="format">
+                <option value="image/webp">WebP</option>
+                <option value="image/jpeg">JPEG</option>
+                <option value="image/png">PNG</option>
+                <option value="image/avif">AVIF if supported</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Quality <output id="qualityValue">82%</output></span>
+              <input id="quality" type="range" min="35" max="100" value="82">
+            </label>
+          </div>
+          <div class="field-grid two">
+            <label class="field">
+              <span>JPEG background</span>
+              <input id="backgroundColor" type="color" value="#ffffff">
+            </label>
+            <label class="checkline">
+              <input id="stripMetadata" type="checkbox" checked disabled>
+              <span>Metadata stripped on export</span>
+            </label>
+          </div>
+          <p class="helper-text">Canvas export always re-encodes files locally, removing typical EXIF and location metadata. Animated GIFs export as a still image from the first decoded frame.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="resizeTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Resize</p>
+              <h2 id="resizeTitle">Dimensions and crop</h2>
+            </div>
+          </div>
+          <label class="field full">
+            <span>Resize mode</span>
+            <select id="resizeMode">
+              <option value="max">Fit within maximum edge</option>
+              <option value="none">Keep original dimensions</option>
+              <option value="percent">Scale by percentage</option>
+              <option value="contain">Exact size, contain image</option>
+              <option value="cover">Exact size, crop to fill</option>
+              <option value="square">Square crop</option>
+            </select>
+          </label>
+          <div class="field-grid two">
+            <label class="field" data-mode-field="max">
+              <span>Maximum edge</span>
+              <input id="maxEdge" type="number" min="64" max="12000" step="1" value="1600">
+            </label>
+            <label class="field" data-mode-field="percent" hidden>
+              <span>Scale percent</span>
+              <input id="scalePercent" type="number" min="1" max="400" step="1" value="50">
+            </label>
+            <label class="field" data-mode-field="square" hidden>
+              <span>Square size</span>
+              <input id="squareSize" type="number" min="64" max="6000" step="1" value="1024">
+            </label>
+            <label class="field">
+              <span>Crop focus</span>
+              <select id="focalPoint">
+                <option value="center">Center</option>
+                <option value="top">Top</option>
+                <option value="bottom">Bottom</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-grid two" data-mode-field="exact" hidden>
+            <label class="field">
+              <span>Width</span>
+              <input id="targetWidth" type="number" min="1" max="12000" step="1" value="1200">
+            </label>
+            <label class="field">
+              <span>Height</span>
+              <input id="targetHeight" type="number" min="1" max="12000" step="1" value="800">
+            </label>
+          </div>
+          <label class="checkline">
+            <input id="preventUpscale" type="checkbox" checked>
+            <span>Do not enlarge small images</span>
+          </label>
+        </section>
+
+        <section class="panel" aria-labelledby="transformTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Transform</p>
+              <h2 id="transformTitle">Rotate and flip</h2>
+            </div>
+          </div>
+          <div class="field-grid two">
+            <label class="field">
+              <span>Rotation</span>
+              <select id="rotation">
+                <option value="0">0 degrees</option>
+                <option value="90">90 degrees</option>
+                <option value="180">180 degrees</option>
+                <option value="270">270 degrees</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Filename suffix</span>
+              <input id="filenameSuffix" type="text" value="-imagefreely" spellcheck="false">
+            </label>
+          </div>
+          <div class="toggle-row" aria-label="Flip options">
+            <label class="checkline">
+              <input id="flipHorizontal" type="checkbox">
+              <span>Flip horizontal</span>
+            </label>
+            <label class="checkline">
+              <input id="flipVertical" type="checkbox">
+              <span>Flip vertical</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="limitsTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Limits</p>
+              <h2 id="limitsTitle">Browser constraints</h2>
+            </div>
+          </div>
+          <p class="helper-text">Very large photos can use a lot of memory because the browser decodes them before resizing. If processing fails, try fewer files at once or lower the output dimensions.</p>
+        </section>
+      </form>
+    </main>
+
+    <section class="discovery-section" aria-labelledby="discoveryTitle">
+      <div class="discovery-content">
+        <p class="eyebrow">Discovery</p>
+        <h2 id="discoveryTitle">Bulk image tools with no upload step</h2>
+        <p class="discovery-lede">Image Freely Bulk is a free browser batch image compressor, resizer, converter, and metadata cleaner. It handles common searches like bulk image compressor, batch image resize, JPG compressor, PNG to WebP converter, and photo metadata remover without uploads, accounts, watermarks, or gated downloads.</p>
+        <ul class="search-terms" aria-label="Common Image Freely searches">
+          <li>bulk image compressor</li>
+          <li>batch image resize</li>
+          <li>convert image to WebP</li>
+          <li>strip EXIF metadata</li>
+          <li>image resizer no login</li>
+          <li>free photo compressor</li>
+        </ul>
+        <div class="discovery-grid" aria-label="Image Freely capabilities">
+          <article>
+            <h3>Batch compression</h3>
+            <p>Compress photos for email, websites, forms, marketplaces, Discord, and uploads. Process one file or a batch and download results individually or as a ZIP.</p>
+          </article>
+          <article>
+            <h3>Resize and convert</h3>
+            <p>Resize by maximum edge, exact size, crop, square crop, or percentage. Export JPEG, PNG, WebP, or AVIF when your browser supports the format.</p>
+          </article>
+          <article>
+            <h3>Local privacy cleanup</h3>
+            <p>Images are decoded and re-encoded in your browser, which strips common embedded metadata such as EXIF camera and location tags from exports.</p>
+          </article>
+        </div>
+        <div class="faq-list" id="faq" aria-label="Image Freely answers">
+          <article>
+            <h3>Does Image Freely Bulk upload my images?</h3>
+            <p>No. Files are decoded, processed, and exported in your browser.</p>
+          </article>
+          <article>
+            <h3>Does it add a watermark?</h3>
+            <p>No. Downloads are your processed image files without an Image Freely mark.</p>
+          </article>
+          <article>
+            <h3>Can I download a batch as a ZIP?</h3>
+            <p>Yes. Select multiple images, process them, and download a ZIP archive.</p>
+          </article>
+          <article>
+            <h3>Does it support HEIC?</h3>
+            <p>Only when your browser can decode the HEIC or HEIF file. Unsupported files are shown with an error instead of being uploaded elsewhere.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer suite-footer">
+      <div class="suite-footer-head">
+        <strong>More free local-first browser tools</strong>
+        <span>Freely tools run in your browser when possible, with no accounts, uploads, watermarks, or download gates.</span>
+      </div>
+      <nav class="suite-footer-nav" aria-label="Freely tools">
+        <a class="suite-link" href="https://computefreely.com/"><strong>Compute Freely</strong><span>Free local browser tools</span></a>
+        <a class="suite-link" href="https://qrfreely.com/"><strong>QR Freely</strong><span>Free QR code generator</span></a>
+        <a class="suite-link" href="https://videofreely.com/"><strong>Video Freely</strong><span>Browser video converter</span></a>
+        <a class="suite-link" href="https://pdffreely.com/"><strong>PDF Freely</strong><span>PDF merge, split, and organize</span></a>
+        <a class="suite-link" href="https://fillfreely.com/"><strong>Fill Freely</strong><span>PDF form filler and signer</span></a>
+        <a class="suite-link" href="https://imagefreely.com/"><strong>Image Freely</strong><span>Image editor and bulk converter</span></a>
+      </nav>
+      <nav class="suite-footer-meta" aria-label="Project links">
+        <a href="https://github.com/ComputeFreely/imagefreely.com">Source on GitHub</a>
+        <a href="https://github.com/ComputeFreely/imagefreely.com/issues/new">Report an issue</a>
+        <a href="mailto:info@computefreely.com">info@computefreely.com</a>
+      </nav>
+    </footer>
+  </body>
+</html>
