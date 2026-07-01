@@ -141,27 +141,14 @@
             <span>Batch compress and convert</span>
           </a>
         </nav>
-        <div class="guarantee-pills" aria-label="Site guarantees">
-          <span class="status-pill">Free</span>
-          <span class="status-pill">No uploads</span>
-          <span class="status-pill">No watermark</span>
-        </div>
       </div>
     </header>
 
     <main class="app-shell">
       <section class="workspace-pane" aria-labelledby="workspaceTitle">
-        <div class="workspace-header">
-          <div>
-            <p class="eyebrow">Image Workspace</p>
-            <h1 id="workspaceTitle">Bulk compress, resize, and convert images</h1>
-          </div>
+        <div class="workspace-header compact-header">
+          <h1 class="sr-only" id="workspaceTitle">Bulk image converter</h1>
           <div class="engine-badge" id="engineBadge" aria-live="polite">Ready</div>
-        </div>
-
-        <div class="promise-strip" aria-label="Freely promise">
-          <strong>No account. No upload. No watermark. No download gate.</strong>
-          <a href="https://computefreely.com/">Compute Freely promise</a>
         </div>
 
         <div class="drop-zone" id="dropZone">
@@ -169,7 +156,6 @@
           <label class="drop-label" for="fileInput">
             <span class="drop-icon upload-icon" aria-hidden="true"></span>
             <span class="drop-title">Choose or drop images</span>
-            <span class="drop-note">Batch JPG, PNG, WebP, AVIF, GIF stills, BMP, TIFF, and any image your browser can decode</span>
           </label>
         </div>
 
@@ -218,9 +204,8 @@
           <button type="button" class="mini-button" data-batch="remove-complete">Remove complete</button>
         </div>
 
-        <div id="emptyState" class="empty-state">
-          <h2>Start with one image or a whole folder of exports.</h2>
-          <p>Files stay on your device. Image Freely reads them in the browser, strips metadata during export, and only creates downloads when you ask.</p>
+        <div id="emptyState" class="empty-state sr-only">
+          <h2>Choose images to begin.</h2>
         </div>
 
         <div class="image-grid" id="imageGrid" aria-label="Selected images"></div>
@@ -275,7 +260,6 @@
               <span>Metadata stripped on export</span>
             </label>
           </div>
-          <p class="helper-text">Canvas export always re-encodes files locally, removing typical EXIF and location metadata. Animated GIFs export as a still image from the first decoded frame.</p>
         </section>
 
         <section class="panel" aria-labelledby="resizeTitle">
@@ -377,7 +361,6 @@
               <h2 id="limitsTitle">Browser constraints</h2>
             </div>
           </div>
-          <p class="helper-text">Very large photos can use a lot of memory because the browser decodes them before resizing. If processing fails, try fewer files at once or lower the output dimensions.</p>
         </section>
       </form>
     </main>

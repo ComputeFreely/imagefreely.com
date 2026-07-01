@@ -144,27 +144,14 @@
             <span>Batch compress and convert</span>
           </a>
         </nav>
-        <div class="guarantee-pills" aria-label="Site guarantees">
-          <span class="status-pill">Free</span>
-          <span class="status-pill">No uploads</span>
-          <span class="status-pill">No watermark</span>
-        </div>
       </div>
     </header>
 
     <main class="editor-shell app-shell">
       <section class="editor-pane" aria-labelledby="editorTitle">
-        <div class="workspace-header">
-          <div>
-            <p class="eyebrow">Image Editor</p>
-            <h1 id="editorTitle">Edit one image with live crop and export preview</h1>
-          </div>
+        <div class="workspace-header compact-header">
+          <h1 class="sr-only" id="editorTitle">Image editor</h1>
           <div class="engine-badge" id="editorBadge" aria-live="polite">Ready</div>
-        </div>
-
-        <div class="promise-strip" aria-label="Freely promise">
-          <strong>No account. No upload. No watermark. No download gate.</strong>
-          <a href="https://computefreely.com/">Compute Freely promise</a>
         </div>
 
         <div class="editor-drop" id="editorDrop">
@@ -172,7 +159,6 @@
           <label class="drop-label" for="editorFileInput">
             <span class="drop-icon upload-icon" aria-hidden="true"></span>
             <span class="drop-title">Choose, drop, or paste one image</span>
-            <span class="drop-note">Crop, resize, convert, remove background, and download locally in your browser</span>
           </label>
         </div>
 
@@ -265,7 +251,6 @@
               <option value="9:16">Vertical 9:16</option>
             </select>
           </label>
-          <p class="helper-text">Drag the crop box or its handles. The export preview updates as you edit.</p>
         </section>
 
         <section class="panel" aria-labelledby="resizeTitle">
@@ -304,7 +289,7 @@
             <input id="preventUpscale" type="checkbox" checked>
             <span>Do not enlarge small images</span>
           </label>
-          <p class="helper-text" id="resizeHelp">Export at 100% of the crop, or switch to custom dimensions for a fixed target size.</p>
+          <p class="helper-text sr-only" id="resizeHelp"></p>
         </section>
 
         <section class="panel" aria-labelledby="backgroundTitle">
@@ -328,7 +313,7 @@
             </label>
           </div>
           <button class="button" type="button" id="removeBackgroundButton" disabled>Remove background</button>
-          <p class="helper-text" id="backgroundHelp">Choose an image first. The browser model loads on demand and works best for clear subjects and product photos.</p>
+          <p class="helper-text" id="backgroundHelp"></p>
         </section>
 
         <section class="panel" aria-labelledby="adjustTitle">
@@ -378,7 +363,6 @@
               <span>Flip vertical</span>
             </label>
           </div>
-          <p class="helper-text">Canvas export re-encodes the image locally, which removes typical EXIF and location metadata.</p>
         </section>
 
         <section class="panel" aria-labelledby="bulkTitle">
@@ -388,7 +372,6 @@
               <h2 id="bulkTitle">Need batch exports?</h2>
             </div>
           </div>
-          <p class="helper-text">Use the bulk page for many files, shared settings, and ZIP downloads.</p>
           <a class="button" href="/bulk/">Open bulk tools</a>
         </section>
       </form>

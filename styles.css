@@ -453,6 +453,10 @@ body {
   margin: 0;
 }
 
+.helper-text:empty {
+  display: none;
+}
+
 .image-topbar-actions {
   flex: 1 1 auto;
   gap: 0.7rem;
