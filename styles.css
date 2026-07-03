@@ -364,6 +364,10 @@ body {
   font-weight: 850;
 }
 
+.card-error:empty {
+  display: none;
+}
+
 .card-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -455,6 +459,20 @@ body {
 
 .helper-text:empty {
   display: none;
+}
+
+.drop-help.error {
+  color: var(--red);
+  font-weight: 850;
+}
+
+.helper-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .image-topbar-actions {
@@ -604,6 +622,11 @@ body {
   touch-action: none;
 }
 
+.crop-box:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 3px;
+}
+
 .crop-box::before,
 .crop-box::after {
   content: "";
@@ -630,6 +653,23 @@ body {
   border-radius: 999px;
   background: var(--surface);
   box-shadow: 0 2px 8px rgba(23, 33, 31, 0.22);
+}
+
+.crop-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+}
+
+@media (pointer: coarse) {
+  .crop-handle::after {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 .crop-handle.nw,

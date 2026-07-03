@@ -13,9 +13,13 @@
   var drag = null;
   var estimateTimer = null;
   var rembgSession = null;
+  var rembgRuntimePromise = null;
   var activeSizeMode = "scale";
   var dragRenderFrame = null;
   var pendingPreset = "";
+  var loadSequence = 0;
+  var cropKeyTimer = null;
+  var lastCustomSize = { width: null, height: null };
 
   var $ = function (selector) {
     return document.querySelector(selector);
@@ -103,17 +107,26 @@
     window.addEventListener("pointermove", moveCropDrag);
     window.addEventListener("pointerup", endCropDrag);
     window.addEventListener("resize", scheduleRender);
+    $("#cropBox").addEventListener("keydown", handleCropKeydown);
   }
 
   async function loadFile(file) {
     if (!isLikelyImage(file)) {
       setBadge("Choose an image file");
+      setDropHelp("That file does not look like an image.", true);
       return;
     }
 
+    var token = ++loadSequence;
+
     try {
       setBadge("Loading image");
+      setDropHelp("");
       var decodedImage = await decodeImage(file);
+      if (token !== loadSequence) {
+        if (decodedImage && typeof decodedImage.close === "function") decodedImage.close();
+        return;
+      }
       if (editSource && editSource !== original) cleanupImage(editSource);
       cleanupImage(original);
       original = {
@@ -123,12 +136,16 @@
       };
       editSource = original;
       crop = { x: 0, y: 0, w: original.image.width, h: original.image.height };
+      lastCustomSize = { width: null, height: null };
       setCustomSizeToCrop();
       history = [];
       historyIndex = -1;
       pushHistory();
       $("#editorWorkbench").hidden = false;
       updateReadyState();
+      if (isGif(file)) {
+        setDropHelp("Animated GIFs are flattened: only the first frame is kept.", false);
+      }
       if (pendingPreset) {
         applyPreset(pendingPreset);
       } else {
@@ -136,10 +153,30 @@
         render();
       }
     } catch (error) {
+      if (token !== loadSequence) return;
       setBadge("Could not decode image");
-      $("#backgroundHelp").textContent = error && error.message ? error.message : "This browser could not decode that image.";
+      var message = error && error.message ? error.message : "This browser could not decode that image.";
+      if (isLikelyHeic(file)) {
+        message = "HEIC files only decode in Safari - convert to JPEG first.";
+      }
+      setDropHelp(message, true);
       updateReadyState();
     }
+  }
+
+  function isGif(file) {
+    return file.type === "image/gif" || /\.gif$/.test(file.name.toLowerCase());
+  }
+
+  function isLikelyHeic(file) {
+    return /\.(heic|heif)$/.test(file.name.toLowerCase());
+  }
+
+  function setDropHelp(message, isError) {
+    var help = $("#editorDropHelp");
+    if (!help) return;
+    help.textContent = message || "";
+    help.classList.toggle("error", Boolean(isError));
   }
 
   function handleControlInput(event) {
@@ -155,6 +192,17 @@
     syncSizeControls();
 
     if (!original) {
+      return;
+    }
+
+    var isDimensionField = event.target.id === "outputWidth" || event.target.id === "outputHeight";
+    if (isDimensionField && event.target.value.trim() === "") {
+      if (event.type === "change") {
+        var committed = getOutputSizeForMode("custom");
+        $("#outputWidth").value = committed.width;
+        $("#outputHeight").value = committed.height;
+        render();
+      }
       return;
     }
 
@@ -270,6 +318,54 @@
     render();
   }
 
+  function handleCropKeydown(event) {
+    if (!original) return;
+    var deltas = {
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 },
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 }
+    };
+    var delta = deltas[event.key];
+    if (!delta) return;
+    event.preventDefault();
+
+    var step = (event.shiftKey ? 16 : 2) / (view.scale || 1);
+    var minSize = Math.max(12, Math.min(original.image.width, original.image.height) * 0.02);
+    var image = editSource.image;
+    var next = copyCrop(crop);
+
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      var ratio = getAspectRatio();
+      var growW = delta.x * step;
+      var growH = delta.y * step;
+      if (ratio) {
+        if (delta.x !== 0) {
+          growH = growW / ratio;
+        } else {
+          growW = growH * ratio;
+        }
+      }
+      next.w = clampFloat(next.w + growW, minSize, image.width - next.x);
+      next.h = clampFloat(next.h + growH, minSize, image.height - next.y);
+      if (ratio) {
+        var fitted = fitAspectSize(next.w, next.h, ratio, minSize, image.width - next.x, image.height - next.y);
+        next.w = fitted.width;
+        next.h = fitted.height;
+      }
+      crop = clampCrop(next, minSize);
+    } else {
+      next.x += delta.x * step;
+      next.y += delta.y * step;
+      crop = clampCrop(next, minSize);
+    }
+
+    setBadge("Crop " + Math.round(crop.w) + " x " + Math.round(crop.h) + " at " + Math.round(crop.x) + ", " + Math.round(crop.y));
+    window.clearTimeout(cropKeyTimer);
+    cropKeyTimer = window.setTimeout(pushHistory, 400);
+    render();
+  }
+
   function undo() {
     if (historyIndex <= 0) return;
     historyIndex -= 1;
@@ -350,7 +446,42 @@
     }
   }
 
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = function () {
+        resolve();
+      };
+      script.onerror = function () {
+        script.remove();
+        reject(new Error("Could not load the background-removal runtime. Check your connection and try again."));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  function loadRembgRuntime() {
+    if (window.ort && (window.RembgWeb || window.rembgWeb)) {
+      return Promise.resolve();
+    }
+    if (!rembgRuntimePromise) {
+      rembgRuntimePromise = loadScript("/assets/vendor/rembg/ort.min.js")
+        .then(function () {
+          return loadScript("/assets/vendor/rembg/rembg-web.umd.min.js");
+        })
+        .catch(function (error) {
+          rembgRuntimePromise = null;
+          throw error;
+        });
+    }
+    return rembgRuntimePromise;
+  }
+
   async function ensureRembg() {
+    $("#backgroundHelp").textContent = "Loading background-removal runtime...";
+    await loadRembgRuntime();
     var rembg = window.RembgWeb || window.rembgWeb;
     if (!window.ort || !rembg) {
       throw new Error("Background-removal runtime did not load.");
@@ -573,8 +704,10 @@
     var height;
 
     if (mode === "custom") {
-      width = clampNumber($("#outputWidth").value, 1, 12000, Math.max(1, Math.round(crop.w)));
-      height = clampNumber($("#outputHeight").value, 1, 12000, Math.max(1, Math.round(crop.h)));
+      width = readDimensionInput("#outputWidth", lastCustomSize.width, Math.max(1, Math.round(crop.w)));
+      height = readDimensionInput("#outputHeight", lastCustomSize.height, Math.max(1, Math.round(crop.h)));
+      lastCustomSize.width = width;
+      lastCustomSize.height = height;
     } else {
       var scale = clampNumber($("#outputScale").value, 10, 200, 100) / 100;
       width = Math.max(1, Math.round(crop.w * scale));
@@ -590,11 +723,22 @@
     return { width: width, height: height };
   }
 
+  function readDimensionInput(selector, committed, fallback) {
+    var raw = String($(selector).value);
+    if (raw.trim() === "") {
+      return committed !== null ? committed : fallback;
+    }
+    return clampNumber(raw, 1, 12000, fallback);
+  }
+
   function updateMeta() {
     var settings = readSettings();
+    var rotated = settings.rotation % 180 !== 0;
+    var outW = rotated ? settings.height : settings.width;
+    var outH = rotated ? settings.width : settings.height;
     $("#sourceMeta").textContent = original.image.width + " x " + original.image.height + " - " + formatBytes(original.file.size);
     $("#cropMeta").textContent = Math.round(crop.w) + " x " + Math.round(crop.h);
-    $("#outputMeta").textContent = settings.width + " x " + settings.height;
+    $("#outputMeta").textContent = outW + " x " + outH;
     updateHistoryButtons();
   }
 
@@ -873,8 +1017,11 @@
   }
 
   function syncScaleLabel() {
-    var scale = clampNumber($("#outputScale").value, 10, 200, 100);
-    $("#outputScale").value = scale;
+    var slider = $("#outputScale");
+    var maxScale = $("#preventUpscale").checked ? 100 : 200;
+    slider.max = String(maxScale);
+    var scale = clampNumber(slider.value, 10, maxScale, 100);
+    slider.value = scale;
     $("#scaleValue").textContent = scale + "%";
   }
 
@@ -923,7 +1070,9 @@
 
   function decodeImage(fileOrBlob) {
     if (window.createImageBitmap) {
-      return createImageBitmap(fileOrBlob);
+      return createImageBitmap(fileOrBlob, { imageOrientation: "from-image" }).catch(function () {
+        return createImageBitmap(fileOrBlob);
+      });
     }
     return new Promise(function (resolve, reject) {
       var url = URL.createObjectURL(fileOrBlob);

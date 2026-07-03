@@ -4,7 +4,9 @@
   var files = [];
   var nextId = 1;
   var processing = false;
-  var objectUrls = [];
+  var dimensionQueue = [];
+  var dimensionActive = 0;
+  var DIMENSION_CONCURRENCY = 4;
 
   var $ = function (selector) {
     return document.querySelector(selector);
@@ -87,12 +89,12 @@
 
     $("#imageForm").addEventListener("input", function () {
       syncControls();
-      render();
+      refreshCards();
     });
 
     $("#imageForm").addEventListener("change", function () {
       syncControls();
-      render();
+      refreshCards();
     });
 
     $$(".preset").forEach(function (button) {
@@ -131,7 +133,6 @@
       }
 
       var url = URL.createObjectURL(file);
-      objectUrls.push(url);
       var item = {
         id: String(nextId++),
         file: file,
@@ -162,17 +163,38 @@
   }
 
   function readDimensions(item) {
+    dimensionQueue.push(item);
+    pumpDimensionQueue();
+  }
+
+  function pumpDimensionQueue() {
+    while (dimensionActive < DIMENSION_CONCURRENCY && dimensionQueue.length) {
+      readDimensionsNow(dimensionQueue.shift());
+    }
+  }
+
+  function readDimensionsNow(item) {
+    if (files.indexOf(item) === -1) {
+      return;
+    }
+
+    dimensionActive += 1;
+
     decodeImage(item.file)
       .then(function (image) {
         item.width = image.width;
         item.height = image.height;
         closeImage(image);
-        render();
+        updateCard(item, currentSettingsKey());
       })
       .catch(function () {
         item.status = "error";
         item.error = "This browser could not decode the image.";
-        render();
+        updateCard(item, currentSettingsKey());
+      })
+      .then(function () {
+        dimensionActive -= 1;
+        pumpDimensionQueue();
       });
   }
 
@@ -201,24 +223,27 @@
     });
 
     syncControls();
-    render();
+    refreshCards();
   }
 
   function applyBatch(action) {
     if (action === "select-all") {
       files.forEach(function (item) { item.selected = true; });
+      refreshCards();
     } else if (action === "select-none") {
       files.forEach(function (item) { item.selected = false; });
+      refreshCards();
     } else if (action === "invert") {
       files.forEach(function (item) { item.selected = !item.selected; });
+      refreshCards();
     } else if (action === "remove-complete") {
       files = files.filter(function (item) {
         var keep = !item.result;
         if (!keep) revokeItemUrls(item);
         return keep;
       });
+      render();
     }
-    render();
   }
 
   function handleCardClick(event) {
@@ -242,7 +267,7 @@
     var item = findItem(event.target.closest(".image-card").dataset.id);
     if (item) {
       item.selected = event.target.checked;
-      render();
+      updateStats();
     }
   }
 
@@ -258,12 +283,14 @@
   function resetAll() {
     files.forEach(revokeItemUrls);
     files = [];
-    objectUrls.forEach(URL.revokeObjectURL);
-    objectUrls = [];
     $("#imageForm").reset();
     syncControls();
     setBadge("Ready");
     render();
+  }
+
+  function currentSettingsKey() {
+    return JSON.stringify(readSettings());
   }
 
   function render() {
@@ -271,17 +298,30 @@
     grid.innerHTML = "";
     $("#emptyState").hidden = files.length > 0;
 
-    var settings = readSettings();
-    var settingsKey = JSON.stringify(settings);
+    var settingsKey = currentSettingsKey();
 
     files.forEach(function (item) {
       grid.appendChild(createCard(item, settingsKey));
     });
 
+    updateStats();
+  }
+
+  function refreshCards() {
+    var settingsKey = currentSettingsKey();
+    files.forEach(function (item) {
+      updateCard(item, settingsKey);
+    });
+    updateStats();
+  }
+
+  function updateStats() {
+    var withResults = files.filter(function (item) { return item.result; });
     var original = files.reduce(function (sum, item) { return sum + item.file.size; }, 0);
-    var output = files.reduce(function (sum, item) { return sum + (item.result ? item.result.blob.size : 0); }, 0);
+    var processedOriginal = withResults.reduce(function (sum, item) { return sum + item.file.size; }, 0);
+    var output = withResults.reduce(function (sum, item) { return sum + item.result.blob.size; }, 0);
     var selectedCount = files.filter(function (item) { return item.selected; }).length;
-    var savings = output && original ? Math.round((1 - output / original) * 100) : 0;
+    var savings = output && processedOriginal ? Math.round((1 - output / processedOriginal) * 100) : 0;
 
     $("#fileCount").textContent = files.length ? files.length + " / " + selectedCount : "0";
     $("#originalSize").textContent = formatBytes(original);
@@ -297,6 +337,14 @@
     });
   }
 
+  function previewUrl(item) {
+    return item.status === "complete" && item.resultUrl ? item.resultUrl : item.url;
+  }
+
+  function getOutputText(item) {
+    return item.result ? item.result.width + "x" + item.result.height + " - " + formatBytes(item.result.blob.size) : "Not exported yet";
+  }
+
   function createCard(item, settingsKey) {
     var card = document.createElement("article");
     card.className = "image-card";
@@ -304,11 +352,11 @@
 
     var badgeText = getBadgeText(item, settingsKey);
     var metaText = getMetaText(item);
-    var outputText = item.result ? item.result.width + "x" + item.result.height + " - " + formatBytes(item.result.blob.size) : "Not exported yet";
+    var outputText = getOutputText(item);
 
     card.innerHTML =
       '<div class="card-preview">' +
-        '<img src="' + attr(item.url) + '" alt="Preview of ' + attr(item.file.name) + '">' +
+        '<img src="' + attr(previewUrl(item)) + '" alt="Preview of ' + attr(item.file.name) + '">' +
         '<label class="card-check" aria-label="Select ' + attr(item.file.name) + '">' +
           '<input type="checkbox" data-select ' + (item.selected ? "checked" : "") + '>' +
         '</label>' +
@@ -317,10 +365,10 @@
       '<div class="card-body">' +
         '<div class="card-name" title="' + attr(item.file.name) + '">' + text(item.file.name) + '</div>' +
         '<div class="card-meta">' +
-          '<span>' + text(metaText) + '</span>' +
-          '<span>' + text(outputText) + '</span>' +
+          '<span data-meta="source">' + text(metaText) + '</span>' +
+          '<span data-meta="output">' + text(outputText) + '</span>' +
         '</div>' +
-        (item.error ? '<div class="card-error">' + text(item.error) + '</div>' : '') +
+        '<div class="card-error">' + text(item.error || "") + '</div>' +
       '</div>' +
       '<div class="card-actions">' +
         '<button class="mini-button" type="button" data-action="process">Process</button>' +
@@ -329,6 +377,34 @@
       '</div>';
 
     return card;
+  }
+
+  function updateCard(item, settingsKey) {
+    var card = $("#imageGrid .image-card[data-id='" + item.id + "']");
+    if (!card) return;
+
+    var badge = card.querySelector(".card-badge");
+    var badgeText = getBadgeText(item, settingsKey);
+    if (badge.textContent !== badgeText) badge.textContent = badgeText;
+
+    var sourceMeta = card.querySelector("[data-meta='source']");
+    var metaText = getMetaText(item);
+    if (sourceMeta.textContent !== metaText) sourceMeta.textContent = metaText;
+
+    var outputMeta = card.querySelector("[data-meta='output']");
+    var outputText = getOutputText(item);
+    if (outputMeta.textContent !== outputText) outputMeta.textContent = outputText;
+
+    var errorNode = card.querySelector(".card-error");
+    var errorText = item.error || "";
+    if (errorNode.textContent !== errorText) errorNode.textContent = errorText;
+
+    var image = card.querySelector(".card-preview img");
+    var url = previewUrl(item);
+    if (image.getAttribute("src") !== url) image.src = url;
+
+    var checkbox = card.querySelector("[data-select]");
+    if (checkbox.checked !== item.selected) checkbox.checked = item.selected;
   }
 
   function getBadgeText(item, settingsKey) {
@@ -357,7 +433,7 @@
 
     processing = true;
     setBadge("Processing " + items.length + " image" + (items.length === 1 ? "" : "s"));
-    render();
+    updateStats();
 
     var settings = readSettings();
     var settingsKey = JSON.stringify(settings);
@@ -371,7 +447,7 @@
         if (!item.result || item.result.settingsKey !== settingsKey) {
           item.status = "processing";
           item.error = "";
-          render();
+          updateCard(item, settingsKey);
           item.result = await processItem(item, settings, settingsKey);
           if (item.resultUrl) URL.revokeObjectURL(item.resultUrl);
           item.resultUrl = URL.createObjectURL(item.result.blob);
@@ -382,15 +458,21 @@
         item.status = "error";
         item.error = error && error.message ? error.message : "Could not process this image.";
       }
+      updateCard(item, settingsKey);
+      updateStats();
     }
 
     processing = false;
     setBadge(processed.length ? "Processed " + processed.length : "Nothing processed");
-    render();
+    updateStats();
 
     if (download && processed.length) {
       if (zip || processed.length > 1) {
-        await downloadZip(processed);
+        try {
+          await downloadZip(processed);
+        } catch (error) {
+          setBadge("ZIP failed");
+        }
       } else {
         downloadBlob(processed[0].result.blob, processed[0].result.name);
       }
@@ -516,6 +598,11 @@
       var targetW = mode === "square" ? settings.squareSize : settings.targetWidth;
       var targetH = mode === "square" ? settings.squareSize : settings.targetHeight;
       var crop = coverCrop(srcW, srcH, targetW, targetH, settings.focalPoint);
+      if (settings.preventUpscale) {
+        var coverScale = Math.min(1, crop.w / targetW, crop.h / targetH);
+        targetW = Math.max(1, Math.round(targetW * coverScale));
+        targetH = Math.max(1, Math.round(targetH * coverScale));
+      }
       layout.srcX = crop.x;
       layout.srcY = crop.y;
       layout.srcW = crop.w;
@@ -562,7 +649,7 @@
   }
 
   function fillCanvas(context, width, height, settings) {
-    if (settings.mime === "image/jpeg" || settings.resizeMode === "contain") {
+    if (settings.mime === "image/jpeg") {
       context.fillStyle = settings.background;
       context.fillRect(0, 0, width, height);
     } else {
@@ -590,7 +677,9 @@
 
   function decodeImage(file) {
     if (window.createImageBitmap) {
-      return createImageBitmap(file);
+      return createImageBitmap(file, { imageOrientation: "from-image" }).catch(function () {
+        return createImageBitmap(file);
+      });
     }
 
     return new Promise(function (resolve, reject) {
@@ -651,19 +740,46 @@
 
   async function downloadZip(items) {
     setBadge("Building ZIP");
-    var entries = [];
-    for (var i = 0; i < items.length; i += 1) {
-      if (!items[i].result) continue;
-      entries.push({
-        name: items[i].result.name,
-        data: new Uint8Array(await items[i].result.blob.arrayBuffer()),
-        lastModified: items[i].file.lastModified || Date.now()
-      });
+    try {
+      var entries = [];
+      var usedNames = Object.create(null);
+      for (var i = 0; i < items.length; i += 1) {
+        if (!items[i].result) continue;
+        entries.push({
+          name: uniqueZipName(items[i].result.name, usedNames),
+          data: new Uint8Array(await items[i].result.blob.arrayBuffer()),
+          lastModified: items[i].file.lastModified || Date.now()
+        });
+      }
+      if (!entries.length) {
+        setBadge("Nothing to ZIP");
+        return;
+      }
+      var zipBlob = createZip(entries);
+      downloadBlob(zipBlob, "imagefreely-images.zip");
+      setBadge("ZIP ready");
+    } catch (error) {
+      setBadge("ZIP failed");
+      throw error;
     }
-    if (!entries.length) return;
-    var zipBlob = createZip(entries);
-    downloadBlob(zipBlob, "imagefreely-images.zip");
-    setBadge("ZIP ready");
+  }
+
+  function uniqueZipName(name, usedNames) {
+    if (!usedNames[name]) {
+      usedNames[name] = true;
+      return name;
+    }
+    var dot = name.lastIndexOf(".");
+    var base = dot > 0 ? name.slice(0, dot) : name;
+    var ext = dot > 0 ? name.slice(dot) : "";
+    var counter = 1;
+    var candidate = base + "-" + counter + ext;
+    while (usedNames[candidate]) {
+      counter += 1;
+      candidate = base + "-" + counter + ext;
+    }
+    usedNames[candidate] = true;
+    return candidate;
   }
 
   function createZip(entries) {

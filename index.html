@@ -12,14 +12,20 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://imagefreely.com/">
     <meta property="og:site_name" content="Image Freely">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://imagefreely.com/assets/og-card.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Free Image Editor: Resize, Crop, Convert, Remove Background | Image Freely">
     <meta name="twitter:description" content="Local browser image editor for crop, resize, conversion, background color, and background removal.">
+    <meta name="twitter:image" content="https://imagefreely.com/assets/og-card.png">
     <title>Free Image Editor: Resize, Crop, Convert, Remove Background | Image Freely</title>
     <link rel="canonical" href="https://imagefreely.com/">
     <link rel="sitemap" type="application/xml" href="/sitemap.xml">
     <link rel="alternate" type="text/plain" href="/llms.txt" title="AI-readable site summary">
     <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="assets/shared/freely-ui.css">
     <script type="application/ld+json">
@@ -120,8 +126,6 @@
         ]
       }
     </script>
-    <script src="assets/vendor/rembg/ort.min.js" defer></script>
-    <script src="assets/vendor/rembg/rembg-web.umd.min.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -161,6 +165,7 @@
             <span class="drop-title">Choose, drop, or paste one image</span>
           </label>
         </div>
+        <p class="helper-text drop-help" id="editorDropHelp" aria-live="polite"></p>
 
         <div class="editor-workbench" id="editorWorkbench" hidden>
           <div class="preview-toolbar" aria-label="Editor actions">
@@ -171,7 +176,7 @@
 
           <div class="editor-stage" id="editorStage" aria-label="Crop editor">
             <canvas id="sourceCanvas"></canvas>
-            <div class="crop-box" id="cropBox" hidden>
+            <div class="crop-box" id="cropBox" hidden tabindex="0" role="group" aria-label="Crop area. Use arrow keys to move the crop, hold Shift for larger steps, and hold Alt or Control with arrow keys to resize.">
               <span class="crop-handle nw" data-handle="nw"></span>
               <span class="crop-handle n" data-handle="n"></span>
               <span class="crop-handle ne" data-handle="ne"></span>
